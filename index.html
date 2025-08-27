@@ -38,7 +38,7 @@
     }).addTo(map);
 
     // Load local EsriJSON
-    fetch('data/mydata.json')
+    fetch('data/suivi_eaux_souterraines_p_2024.json')
       .then(response => response.json())
       .then(esriJson => {
         // Convert EsriJSON to GeoJSON
@@ -67,4 +67,5 @@
   </script>
 </body>
 </html>
+
 
