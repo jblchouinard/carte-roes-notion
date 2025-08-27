@@ -21,11 +21,6 @@
   <!-- Leaflet JS -->
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
-  <!-- Terraformer for EsriJSON conversion -->
-  <script src="https://unpkg.com/terraformer@1.0.8"></script>
-  <script src="https://unpkg.com/terraformer-arcgis-parser@1.0.5"></script>
-  <script src="https://unpkg.com/terraformer-wkt-parser@1.1.2"></script>
-
   <script>
     // Initialize map
     var map = L.map('map').setView([45.5019, -73.5674], 12);
@@ -37,36 +32,30 @@
 
     // Load local EsriJSON
     fetch('data/suivi_eaux_souterraines_p_2024.json')
-      .then(response => response.json())
+          .then(res => res.json())
       .then(esriJson => {
-        // Convert EsriJSON to GeoJSON
-        var geojson = Terraformer.ArcGIS.parse(esriJson);
+        // Convert EsriJSON points to GeoJSON
+        const geojson = {
+          type: "FeatureCollection",
+          features: esriJson.features.map(f => ({
+            type: "Feature",
+            properties: f.attributes,
+            geometry: {
+              type: "Point",
+              coordinates: [f.geometry.x, f.geometry.y]
+            }
+          }))
+        };
 
-        // Add GeoJSON to map
-        var geoLayer = L.geoJSON(geojson, {
-          onEachFeature: function (feature, layer) {
-            // Use attributes (or fallback to properties)
-            const attrs = feature.attributes || feature.properties;
-            if (attrs) {
-              // Use fieldAliases if available for friendly names
-              const popupContent = Object.entries(attrs)
+        // Add GeoJSON to Leaflet
+        const geoLayer = L.geoJSON(geojson, {
+          onEachFeature: function(feature, layer) {
+            const props = feature.properties;
+            layer.bindPopup(
+              Object.entries(props)
                 .map(([k,v]) => `<b>${esriJson.fieldAliases && esriJson.fieldAliases[k] ? esriJson.fieldAliases[k] : k}</b>: ${v}`)
-                .join('<br>');
-              layer.bindPopup(popupContent);
-            }
-          },
-          style: function (feature) {
-            switch (feature.geometry.type) {
-              case 'Polygon':
-              case 'MultiPolygon':
-                return { color: 'green', weight: 2, fillOpacity: 0.3 };
-              case 'LineString':
-              case 'MultiLineString':
-                return { color: 'orange', weight: 3 };
-              case 'Point':
-              case 'MultiPoint':
-                return { color: 'red' };
-            }
+                .join('<br>')
+            );
           },
           pointToLayer: function(feature, latlng) {
             return L.circleMarker(latlng, {
@@ -79,15 +68,14 @@
           }
         }).addTo(map);
 
-        // Zoom map to dataset bounds
-        if (geoLayer.getBounds && geoLayer.getBounds().isValid()) {
-          map.fitBounds(geoLayer.getBounds());
-        }
+        // Zoom to all points
+        map.fitBounds(geoLayer.getBounds());
       })
-      .catch(err => console.error('Error loading EsriJSON:', err));
+      .catch(err => console.error("Error loading EsriJSON:", err));
   </script>
 </body>
 </html>
+
 
 
 
