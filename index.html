@@ -1,17 +1,12 @@
 <!DOCTYPE html>
 <html>
-
 <head>
-  <title>Leaflet Map Example</title>
-  <meta charset="utf-8" />
+  <title>Leaflet Map with EsriJSON</title>
+  <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <!-- Leaflet CSS -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-
-  <!-- Esri Leaflet -->
-  <script src="https://unpkg.com/esri-leaflet/dist/esri-leaflet.js"></script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
 
   <style>
     #map {
@@ -20,7 +15,6 @@
     }
   </style>
 </head>
-
 <body>
   <div id="map"></div>
 
@@ -47,20 +41,20 @@
         // Convert EsriJSON to GeoJSON
         var geojson = Terraformer.ArcGIS.parse(esriJson);
 
-        // Add to Leaflet map
+        // Add GeoJSON to map
         var geoLayer = L.geoJSON(geojson, {
           onEachFeature: function (feature, layer) {
-            // Customize popup (adjust properties to your JSON)
-            if (feature.properties) {
-              layer.bindPopup(
-                Object.entries(feature.properties)
-                  .map(([k, v]) => `<b>${k}</b>: ${v}`)
-                  .join('<br>')
-              );
+            // Use attributes (or fallback to properties)
+            const attrs = feature.attributes || feature.properties;
+            if (attrs) {
+              // Use fieldAliases if available for friendly names
+              const popupContent = Object.entries(attrs)
+                .map(([k,v]) => `<b>${esriJson.fieldAliases && esriJson.fieldAliases[k] ? esriJson.fieldAliases[k] : k}</b>: ${v}`)
+                .join('<br>');
+              layer.bindPopup(popupContent);
             }
           },
           style: function (feature) {
-            // Apply styles based on geometry type
             switch (feature.geometry.type) {
               case 'Polygon':
               case 'MultiPolygon':
@@ -70,10 +64,10 @@
                 return { color: 'orange', weight: 3 };
               case 'Point':
               case 'MultiPoint':
-                return { color: 'red' }; // handled in pointToLayer
+                return { color: 'red' };
             }
           },
-          pointToLayer: function (feature, latlng) {
+          pointToLayer: function(feature, latlng) {
             return L.circleMarker(latlng, {
               radius: 6,
               fillColor: 'red',
@@ -85,11 +79,11 @@
         }).addTo(map);
 
         // Zoom map to dataset bounds
-        map.fitBounds(geoLayer.getBounds());
+        if (geoLayer.getBounds && geoLayer.getBounds().isValid()) {
+          map.fitBounds(geoLayer.getBounds());
+        }
       })
       .catch(err => console.error('Error loading EsriJSON:', err));
   </script>
 </body>
-
 </html>
-
