@@ -48,7 +48,7 @@
         var geojson = Terraformer.ArcGIS.parse(esriJson);
 
         // Add to Leaflet map
-        L.geoJSON(geojson, {
+        var geoLayer = L.geoJSON(geojson, {
           onEachFeature: function (feature, layer) {
             // Customize popup (adjust properties to your JSON)
             if (feature.properties) {
@@ -92,3 +92,4 @@
 </body>
 
 </html>
+
