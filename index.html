@@ -24,19 +24,47 @@
   <!-- Leaflet JS -->
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
+  <!-- Terraformer for EsriJSON conversion -->
+  <script src="https://unpkg.com/terraformer/terraformer.min.js"></script>
+  <script src="https://unpkg.com/terraformer-arcgis-parser/terraformer-arcgis-parser.min.js"></script>
+
   <script>
     // Initialize map
-    var map = L.map('map').setView([45.5019, -73.5674], 12); // Montreal coords
+    var map = L.map('map').setView([45.5019, -73.5674], 12);
 
     // Base map tiles
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '&copy; OpenStreetMap contributors'
     }).addTo(map);
 
-    // Example marker
-    L.marker([45.5019, -73.5674]).addTo(map)
-      .bindPopup("Hello Montreal!")
-      .openPopup();
+    // Load local EsriJSON
+    fetch('data/mydata.json')
+      .then(response => response.json())
+      .then(esriJson => {
+        // Convert EsriJSON to GeoJSON
+        var geojson = Terraformer.ArcGIS.parse(esriJson);
+
+        // Add to Leaflet map
+        L.geoJSON(geojson, {
+          onEachFeature: function (feature, layer) {
+            // Customize popup (adjust properties to your JSON)
+            if (feature.properties) {
+              layer.bindPopup(
+                Object.entries(feature.properties)
+                      .map(([k,v]) => `<b>${k}</b>: ${v}`)
+                      .join('<br>')
+              );
+            }
+          },
+          style: {
+            color: 'blue',
+            weight: 2,
+            fillOpacity: 0.3
+          }
+        }).addTo(map);
+      })
+      .catch(err => console.error('Error loading EsriJSON:', err));
   </script>
 </body>
 </html>
+
