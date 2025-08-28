@@ -34,45 +34,37 @@
 
     // Load local EsriJSON
     fetch('data/suivi_eaux_souterraines_p_2024.json')
-      .then(response => response.json())
+      .then(resp => resp.json())
       .then(esriJson => {
-        try {
-          // Convert EsriJSON to GeoJSON
-          const geojson = Terraformer.ArcGIS.parse(esriJson);
+        esriJson.features.forEach(f => {
+          const attrs = f.attributes;
+          const lat = attrs.Latitude;
+          const lon = attrs.Longitude;
 
-          // Add GeoJSON layer
-          L.geoJSON(geojson, {
-            pointToLayer: function(feature, latlng) {
-              return L.marker(latlng);
-            },
-            onEachFeature: function(feature, layer) {
-              const props = feature.properties;
-              const popupContent = Object.entries(props)
-                .map(([k, v]) => {
-                  if (v === null || v === undefined || v === "") return ""; // skip empty values
+          if (lat && lon) {
+            // Build popup with attributes
+            const popupContent = Object.entries(attrs)
+              .map(([k, v]) => {
+                if (v === null || v === undefined || v === "") return "";
 
-                  // Display as clickable link if it's a URL
-                  if (typeof v === "string" && v.startsWith("http")) {
-                    let label = esriJson.fieldAliases && esriJson.fieldAliases[k] ? esriJson.fieldAliases[k] : k;
-                    return `<b>${label}</b>: <a href="${v}" target="_blank">${label}</a>`;
-                  }
+                // make URLs clickable
+                if (typeof v === "string" && v.startsWith("http")) {
+                  return `<b>${k}</b>: <a href="${v}" target="_blank">Voir</a>`;
+                }
 
-                  // Otherwise display normally
-                  let label = esriJson.fieldAliases && esriJson.fieldAliases[k] ? esriJson.fieldAliases[k] : k;
-                  return `<b>${label}</b>: ${v}`;
-                })
-                .filter(s => s !== "")
-                .join('<br>');
+                return `<b>${k}</b>: ${v}`;
+              })
+              .filter(s => s !== "")
+              .join("<br>");
 
-              layer.bindPopup(popupContent);
-            }
-          }).addTo(map);
-        } catch (err) {
-          console.error("Error parsing EsriJSON:", err);
-        }
+            // Add marker
+            L.marker([lat, lon]).addTo(map).bindPopup(popupContent);
+          }
+        });
       })
-      .catch(err => console.error("Error loading EsriJSON:", err));
+      .catch(err => console.error("Erreur chargement EsriJSON:", err));
   </script>
 </body>
 
 </html>
+
