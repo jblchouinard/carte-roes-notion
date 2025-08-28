@@ -24,16 +24,19 @@
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
   <script>
-    // Initialize map
-    var map = L.map('map');
+    // initialize map
+    const map = L.map('map');
 
-    // Base map tiles
+    // add basemap
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; OpenStreetMap contributors'
+      maxZoom: 19,
+      attribution: '© OpenStreetMap'
     }).addTo(map);
 
-    // Load local EsriJSON
-    fetch('data/suivi_eaux_souterraines_p_2024.json')
+    // create a group for markers
+    const markers = L.featureGroup().addTo(map);
+
+    fetch("data/suivi_eaux_souterraines_p_2024.json")
       .then(resp => resp.json())
       .then(esriJson => {
         esriJson.features.forEach(f => {
@@ -66,6 +69,7 @@
         }
       })
       .catch(err => console.error("Erreur chargement EsriJSON:", err));
+
   </script>
 </body>
 
