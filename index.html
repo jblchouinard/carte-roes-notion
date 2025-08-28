@@ -25,7 +25,7 @@
 
   <script>
     // Initialize map
-    var map = L.map('map').setView([45.5019, -73.5674], 12);
+    var map = L.map('map');
 
     // Base map tiles
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -42,12 +42,10 @@
           const lon = attrs.Longitude;
 
           if (lat && lon) {
-            // Build popup with attributes
             const popupContent = Object.entries(attrs)
               .map(([k, v]) => {
                 if (v === null || v === undefined || v === "") return "";
 
-                // make URLs clickable
                 if (typeof v === "string" && v.startsWith("http")) {
                   return `<b>${k}</b>: <a href="${v}" target="_blank">Voir</a>`;
                 }
@@ -57,14 +55,18 @@
               .filter(s => s !== "")
               .join("<br>");
 
-            // Add marker
-            L.marker([lat, lon]).addTo(map).bindPopup(popupContent);
+            const marker = L.marker([lat, lon]).bindPopup(popupContent);
+            markers.addLayer(marker);
           }
         });
+
+        // adjust map to fit all markers
+        if (markers.getLayers().length > 0) {
+          map.fitBounds(markers.getBounds());
+        }
       })
       .catch(err => console.error("Erreur chargement EsriJSON:", err));
   </script>
 </body>
 
 </html>
-
