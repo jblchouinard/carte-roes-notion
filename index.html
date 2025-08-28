@@ -1,12 +1,13 @@
 <!DOCTYPE html>
 <html>
+
 <head>
   <title>Leaflet Map with EsriJSON</title>
-  <meta charset="utf-8"/>
+  <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <!-- Leaflet CSS -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
 
   <style>
     #map {
@@ -15,10 +16,13 @@
     }
   </style>
 </head>
+
 <body>
   <div id="map"></div>
-  <!-- Leaflet JS -->
+
+    <!-- Leaflet JS -->
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
   <script>
     // Initialize map
     var map = L.map('map').setView([45.5019, -73.5674], 12);
@@ -30,7 +34,7 @@
 
     // Load local EsriJSON
     fetch('data/suivi_eaux_souterraines_p_2024.json')
-          .then(res => res.json())
+      .then(res => res.json())
       .then(esriJson => {
         // Convert EsriJSON points to GeoJSON
         const geojson = {
@@ -40,22 +44,22 @@
             properties: f.attributes,
             geometry: {
               type: "Point",
-              coordinates: [f.geometry.x, f.geometry.y]
+              coordinates: [f.attributes.Longitude, f.attributes.Latitude]
             }
           }))
         };
 
         // Add GeoJSON to Leaflet
         const geoLayer = L.geoJSON(geojson, {
-          onEachFeature: function(feature, layer) {
+          onEachFeature: function (feature, layer) {
             const props = feature.properties;
             layer.bindPopup(
               Object.entries(props)
-                .map(([k,v]) => `<b>${esriJson.fieldAliases && esriJson.fieldAliases[k] ? esriJson.fieldAliases[k] : k}</b>: ${v}`)
+                .map(([k, v]) => `<b>${esriJson.fieldAliases && esriJson.fieldAliases[k] ? esriJson.fieldAliases[k] : k}</b>: ${v}`)
                 .join('<br>')
             );
           },
-          pointToLayer: function(feature, latlng) {
+          pointToLayer: function (feature, latlng) {
             return L.circleMarker(latlng, {
               radius: 6,
               fillColor: 'red',
@@ -72,10 +76,5 @@
       .catch(err => console.error("Error loading EsriJSON:", err));
   </script>
 </body>
+
 </html>
-
-
-
-
-
-
